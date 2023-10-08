@@ -1,0 +1,54 @@
+with downloads as(
+select 0 as step , 'downloads' as name, count(distinct app_download_key) as users_count,
+0 as ride_count
+from app_downloads),
+
+signup as
+(select 1, 'signups', count(distinct user_id) as users_signups,0
+from signups where signup_ts is not null),
+
+requested as
+(select 2, 'requests', count(distinct user_id) as users_requested,
+count(distinct ride_id) as rides_requested
+from ride_requests where request_ts is not null),
+
+accepted as
+(select 3, 'accepted', count(distinct user_id) as users_accepted,
+ count (distinct ride_id) as rides_accepted
+ from ride_requests where accept_ts is not null),
+
+completed as
+(select 4, 'completed', count(distinct user_id) as users_accepted,
+ count (distinct ride_id) as rides_completed
+from ride_requests where dropoff_ts IS NOT NULL
+),
+
+payment as
+(select 5, 'payment', count(distinct r.user_id ) as users_paid,
+ count(distinct t.ride_id) as rides_paid
+ from transactions t
+ join ride_requests r 
+ on t.ride_id = r.ride_id 
+ where charge_status = 'Approved'
+ ),
+
+review as
+(select 6, 'reviews', count(distinct user_id) as users_reviewed,
+ count(distinct ride_id) as rides_reviewed 
+ from reviews)
+
+
+select * from downloads
+union
+select * from signup
+union
+select * from requested
+union
+select * from accepted
+union
+select * from completed
+union
+select * from payment
+union
+select * from review
+order by step
